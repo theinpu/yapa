@@ -15,6 +15,10 @@ $options = json_decode(stream_get_contents(STDIN), true);
 
 $parser = new YandexParser($options);
 
-echo json_encode($parser->getResult());
+$result = json_encode($parser->getResult());
+
+if(isset($result['error'])) {
+    die($result['error']);
+}
 
 exit;

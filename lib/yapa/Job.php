@@ -11,16 +11,12 @@ class Job {
 
     private $proc;
     private $pipes;
-    private $result;
-    private $query;
-    private $page;
-    private $perPage;
+    private $result = array();
+    private $keyword;
 
-    public function __construct($query, $page, $perPage) {
-        echo "job start. get page #{$page}\n";
-        $this->query = $query;
-        $this->page = $page;
-        $this->perPage = $perPage;
+    public function __construct($keyword) {
+        echo "job start. keyword: {$keyword}\n";
+        $this->keyword = $keyword;
         $this->proc = proc_open(getcwd() . "/yapa-worker",
             array(
                 array('pipe', 'r'),
@@ -31,23 +27,22 @@ class Job {
         );
     }
 
-    public function getPages() {
-        return 50;
-    }
-
     public function isFinished() {
         if(is_resource($this->proc)) {
             if(is_resource($this->pipes[0])) {
-                fwrite($this->pipes[0], json_encode(array(
-                    'query' => $this->query,
-                    'page' => $this->page,
-                    'perPage' => $this->perPage
-                )));
+                fwrite($this->pipes[0], json_encode(
+                    array(
+                        'keyword' => $this->keyword
+                    )));
                 fclose($this->pipes[0]);
             }
             $stat = proc_get_status($this->proc);
             if(!$stat['running']) {
-                $this->result = stream_get_contents($this->pipes[1]) . "\n";
+                $result = stream_get_contents($this->pipes[1]);
+                if(!empty($result)) {
+                    $this->result =
+                        json_decode($result, true);
+                }
                 fclose($this->pipes[1]);
                 proc_close($this->proc);
             }
@@ -60,7 +55,7 @@ class Job {
         return $this->result;
     }
 
-    public function getPage() {
-        return $this->page;
+    public function getKeyword() {
+        return $this->keyword;
     }
 }

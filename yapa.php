@@ -8,6 +8,7 @@
 namespace yapa;
 
 require_once 'vendor/autoload.php';
+require_once 'lib/Yandex.php';
 
 use Symfony\Component\Console\Application;
 

@@ -13,31 +13,74 @@ class YandexParser extends Parser {
 
     const USER = "Enzo123";
     const KEY = "03.2155339:fcbedf09b87188a21b5a4fbdc0d11ca2";
+    const PER_PAGE = 100;
+    const YANDEX_RESULT_LIMIT = 1000;
+
+    /**
+     * @var \Yandex
+     */
+    private $ya;
+    private $domains = array();
+
+    public function __construct($options) {
+        parent::__construct($options);
+        $this->ya = new \Yandex(self::USER, self::KEY);
+    }
+
 
     public function getResult() {
-        $result = array();
-        sleep(rand(1,5));
-        /*$ya = new \Yandex(self::USER, self::KEY);
-        $ya->query($this->getOption('query'))
-            ->page($this->getOption('page'))
-            ->limit($this->getOption('perPage'))
-            ->request();
-        if(!isset($ya)) {
-            return array('error' => 'generic error');
+        $page = 1;
+        try {
+            $this->query($page);
         }
-        if(!empty($ya->error)) {
-            return array('error' => $ya->error);
+        catch(\Exception $e) {
+            return array('error' => $e->getMessage());
+        }
+        $pages= $this->ya->pages();
+        $this->countDomains();
+        $page++;
+        for(;$page < $pages && $page < self::YANDEX_RESULT_LIMIT / self::PER_PAGE;
+             $page++) {
+            try {
+                $this->query($page);
+            }
+            catch(\Exception $e) {
+                return array('error' => $e->getMessage()
+                    .'; page:'.$page."; pages:".$pages);
+            }
+            $this->countDomains();
         }
 
-        $result['pages'] = $ya->total();
-
-        $domains = array();
-        foreach($ya->results() as $item) {
-            $domains[] = $item->domain;
-        }
-        $domains = array_unique($domains);
-        $result['domains'] = $domains;*/
-
-        return $result;
+        return $this->domains;
     }
+
+    /**
+     * @param int $page
+     * @throws \Exception
+     */
+    private function query($page) {
+        $this->ya->query($this->getOption('keyword'))
+            ->page($page)
+            ->limit(self::PER_PAGE)
+            ->request();
+        if(!isset($this->ya)) {
+            throw new \Exception('Generic error');
+        }
+        if(!empty($this->ya->error)) {
+            throw new \Exception($this->ya->error);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    private function countDomains() {
+        foreach($this->ya->results() as $item) {
+            if(!array_key_exists((string)$item->domain, $this->domains)) {
+                $this->domains[(string)$item->domain] = 0;
+            }
+            $this->domains[(string)$item->domain]++;
+        }
+    }
+
 }

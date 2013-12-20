@@ -16,12 +16,13 @@ class JobControl {
      */
     private $jobs;
 
-    private $results = array();
     private $nextKeyword = 0;
 
     public function __construct($jobs) {
         $this->jobsLimit = $jobs;
-        $this->keywords = array('Yandex', 'test');
+        $pdo = new \PDO("mysql:dbname=test;host=localhost", "root", "1235");
+        $keywords = $pdo->query("SELECT * FROM keywords");
+        $this->keywords = $keywords->fetchAll();
     }
 
     public function isRun() {
@@ -33,13 +34,14 @@ class JobControl {
             foreach($this->jobs as $key => $job) {
                 if($job->isFinished()) {
                     echo "job finish. keyword: ".($job->getKeyword())."\n";
-                    $this->results[] = $job->getResult();
+                    $job->applyResults();
                     unset($this->jobs[$key]);
                     continue;
                 }
             }
         }
-        if(count($this->jobs) == 0) {
+        if(count($this->jobs) == 0
+            && count($this->keywords) == $this->nextKeyword) {
             return false;
         }
         return true;

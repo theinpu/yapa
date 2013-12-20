@@ -21,11 +21,8 @@ class RunCommand extends Command {
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
-        $output->writeln("Start jobs");
         $jobControl = new JobControl((int)$input->getOption("jobs"));
-        while($jobControl->isRun()) {
-
-        }
+        while($jobControl->isRun());
     }
 
 

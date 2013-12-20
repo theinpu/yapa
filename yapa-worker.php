@@ -15,10 +15,23 @@ $options = json_decode(stream_get_contents(STDIN), true);
 
 $parser = new YandexParser($options);
 
-$result = json_encode($parser->getResult());
+$result = $parser->getResult();
 
 if(isset($result['error'])) {
     die($result['error']);
+}
+
+$pdo = new \PDO("mysql:dbname=test;host=localhost", "root", "1235");
+$insert = $pdo->prepare(
+    "INSERT INTO domains (domain, keyword, `count`) VALUES (:domain, :keyword, :count)
+    ON DUPLICATE KEY UPDATE `count` = :count");
+
+foreach($result as $key => $item) {
+    $insert->bindValue(':domain', $key);
+    $insert->bindValue(':keyword', $options['keyword_id']);
+    $insert->bindValue(':count', $item);
+
+    $insert->execute();
 }
 
 exit;

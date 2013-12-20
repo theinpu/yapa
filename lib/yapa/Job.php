@@ -15,12 +15,12 @@ class Job {
     private $keyword;
 
     public function __construct($keyword) {
-        echo "job start. keyword: {$keyword}\n";
+        echo "job start. keyword: {$keyword['keyword']}\n";
         $this->keyword = $keyword;
         $this->proc = proc_open(getcwd() . "/yapa-worker",
             array(
                 array('pipe', 'r'),
-                array('pipe', 'w'),
+                STDOUT,
                 STDERR
             ),
             $this->pipes
@@ -32,18 +32,13 @@ class Job {
             if(is_resource($this->pipes[0])) {
                 fwrite($this->pipes[0], json_encode(
                     array(
-                        'keyword' => $this->keyword
+                        'keyword_id' => $this->keyword['id'],
+                        'keyword' => $this->keyword['keyword']
                     )));
                 fclose($this->pipes[0]);
             }
             $stat = proc_get_status($this->proc);
             if(!$stat['running']) {
-                $result = stream_get_contents($this->pipes[1]);
-                if(!empty($result)) {
-                    $this->result =
-                        json_decode($result, true);
-                }
-                fclose($this->pipes[1]);
                 proc_close($this->proc);
             }
             return false;
@@ -51,11 +46,11 @@ class Job {
         return true;
     }
 
-    public function getResult() {
+    public function applyResults() {
         return $this->result;
     }
 
     public function getKeyword() {
-        return $this->keyword;
+        return $this->keyword['keyword'];
     }
 }

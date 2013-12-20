@@ -20,8 +20,7 @@ class JobControl {
 
     public function __construct($jobs) {
         $this->jobsLimit = $jobs;
-        $pdo = new \PDO("mysql:dbname=test;host=localhost", "root", "1235");
-        $keywords = $pdo->query("SELECT * FROM keywords");
+        $keywords = PDOHelper::getPDO()->query("SELECT * FROM keywords");
         $this->keywords = $keywords->fetchAll();
     }
 

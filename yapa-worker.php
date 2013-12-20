@@ -21,8 +21,7 @@ if(isset($result['error'])) {
     die($result['error']);
 }
 
-$pdo = new \PDO("mysql:dbname=test;host=localhost", "root", "1235");
-$insert = $pdo->prepare(
+$insert = PDOHelper::getPDO()->prepare(
     "INSERT INTO domains (domain, keyword, `count`) VALUES (:domain, :keyword, :count)
     ON DUPLICATE KEY UPDATE `count` = :count");
 

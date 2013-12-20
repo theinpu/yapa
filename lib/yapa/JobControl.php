@@ -29,9 +29,11 @@ class JobControl {
      * @var int
      */
     private $pages;
-    private $gotPages = 0;
+    private $gotPages = 1;
 
     private $results = array();
+
+    private $firstRun = true;
 
     public function __construct($jobs) {
         $this->jobsLimit = $jobs;
@@ -41,26 +43,32 @@ class JobControl {
         if(empty($this->query)) {
             throw new \Exception("run JobControl::setQuery first");
         }
-        if($this->gotPages >= $this->pages && !is_null($this->pages)) {
+        if($this->firstRun) {
+            $this->startJob(1);
+            $this->firstRun = false;
+        }
+        if($this->gotPages > $this->pages
+            && !is_null($this->pages)
+            && count($this->jobs) == 0
+        ) {
             return false;
         }
-        if(count($this->jobs) <= $this->jobsLimit) {
-            $this->jobs[] = new Job($this->query, $this->pages);
-        }
         if(count($this->jobs) > 0) {
-            echo "jobs count: ".count($this->jobs)."\n";
             foreach($this->jobs as $key => $job) {
                 if($job->isFinished()) {
-                    echo "job finish. got page #".($this->gotPages + 1)."\n";
+                    echo "job finish. got page #".($job->getPage())."\n";
                     if(is_null($this->pages)) {
                         $this->pages = $job->getPages();
                     }
                     $this->results[] = $job->getResult();
-                    $this->gotPages++;
                     unset($this->jobs[$key]);
                     continue;
                 }
             }
+        }
+        if(count($this->jobs) < $this->jobsLimit && !is_null($this->pages)) {
+            $this->gotPages++;
+            $this->startJob($this->gotPages);
         }
         return true;
     }
@@ -71,5 +79,10 @@ class JobControl {
 
     public function setResultsPerPage($perPage) {
         $this->perPage = $perPage;
+    }
+
+    private function startJob($page) {
+        if($this->gotPages > $this->pages && !is_null($this->pages)) return;
+        $this->jobs[] = new Job($this->query, $page, $this->perPage);
     }
 }

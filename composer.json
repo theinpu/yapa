@@ -9,7 +9,6 @@
         }
     ],
     "require": {
-        "phpunit/phpunit": "3.7.28",
         "symfony/console": "2.0.7"
     },
     "autoload": {

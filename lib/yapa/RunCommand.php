@@ -26,7 +26,7 @@ class RunCommand extends Command {
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $output->writeln("Start jobs");
-        $jobControl = new JobControl($input->getOption("jobs"));
+        $jobControl = new JobControl((int)$input->getOption("jobs"));
         $jobControl->setQuery($input->getArgument("query"));
         $jobControl->setResultsPerPage($input->getOption("page-size"));
         while($jobControl->isRun()) {
